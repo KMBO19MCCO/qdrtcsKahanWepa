@@ -1,1 +1,4 @@
 # qdrtcsKahanWepa
+On_the_Cost_of_Floating_Point_Computation_Without_Extra_Precise_Arithmetic-Kahan-2004
+
+C++ implementation with additions
