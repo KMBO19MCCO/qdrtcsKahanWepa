@@ -4,5 +4,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 include_directories(inc)
 link_directories(lib)
+find_package(OpenMP)
 link_libraries(libexcerpt.a)
+link_libraries(OpenMP::OpenMP_CXX)
 add_executable(qdrtcsKahanWepa src/test.cpp src/solver.cpp)

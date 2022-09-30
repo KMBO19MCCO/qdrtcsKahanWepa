@@ -23,11 +23,10 @@ template<typename fp_t> void qdrtc(std::vector<fp_t> coefficients, std::vector<f
     B = coefficients[1]/static_cast<fp_t>(-2);
     C = coefficients[0];
     fp_t d = dscrmt(A,B,C);
-    std::cout<<"d:"<<d<<" d2:"<<B*B - A*C<<std::endl;
-    assert(d > 0);
+    d = std::max(d,static_cast<fp_t>(0.L));
+    //assert(d > 0);
     fp_t S = B;
     S = std::sqrt(d)*(sgn(S) + (S==0)) + S;
-    std::cout<<"S:"<<S<<std::endl;
     fp_t Z1 = S/(A);
     fp_t Z2 = (C)/S;
 
