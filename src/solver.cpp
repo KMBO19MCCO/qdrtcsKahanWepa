@@ -18,7 +18,7 @@ template<typename fp_t> fp_t dscrmt(fp_t A,fp_t B,fp_t C){
 
 template<typename fp_t> void qdrtc(std::vector<fp_t> coefficients, std::vector<fp_t> &roots){
     fp_t A,B,C;
-    //Coefficients should be in BCA order
+    //Coefficients should be in CBA order
     A = coefficients[2];
     B = coefficients[1]/static_cast<fp_t>(-2);
     C = coefficients[0];

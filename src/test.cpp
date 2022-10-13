@@ -20,16 +20,12 @@ struct bestRes {
 };
 int main(){
     unsigned p = 2;
-    vector<fp_t> roots(p);
-    vector<fp_t> output(p);
-    vector<fp_t> coefficients(p + 1);
     ofstream *outputFile;
-    fp_t bestDev = static_cast<fp_t>(0.L);
     int procs = omp_get_num_procs();
+    auto *bestDev = new fp_t[procs]{0};
     outputFile = new ofstream[procs];
+    auto *resFinal = new bestRes[procs]{0};
 
-    bestRes *resFinal;
-    resFinal = new bestRes[procs];
     #pragma omp parallel
     {
         int thread_num = omp_get_thread_num();
@@ -39,27 +35,34 @@ int main(){
     }
     #pragma omp parallel for
     for(int i = 0; i<1000*1000*1000; i++){
+        vector<fp_t> roots(p);
+        vector<fp_t> output(p);
+        vector<fp_t> coefficients(p + 1);
         int thread_num = omp_get_thread_num();
-        auto result = generate_polynomial<fp_t>(p, 0, 2, 0, 10.0L/5, -5, 5.0L, roots, coefficients);
+        generate_polynomial<fp_t>(p, 0, 2, 0, 10.0L/5, -5, 5.0L, roots, coefficients);
         fp_t dev;
         qdrtc(coefficients,output);
-        int res = compare_roots<fp_t>(p,p,output,roots,dev);
-        if(dev > bestDev){
-            bestDev = dev;
-            outputFile[thread_num]<<"dev:"<<bestDev<<" ABC:"<<coefficients[2]<<" "
-            <<coefficients[1]<<" "<<coefficients[0]<<" roots:"<<roots[0]<<" "<<roots[1]<<" out:"<<output[0]<<" "<<output[1]<<endl;
-            resFinal[thread_num].A = coefficients[2];
-            resFinal[thread_num].B = coefficients[1];
-            resFinal[thread_num].C = coefficients[0];
-            resFinal[thread_num].dev = dev;
-            resFinal[thread_num].root0 = roots[0];
-            resFinal[thread_num].root1 = roots[1];
-            resFinal[thread_num].out0 = output[0];
-            resFinal[thread_num].out1 = output[1];
+        int err = compare_roots<fp_t>(p,p,output,roots,dev);
+        if (err >= PR_NUMBERS_OF_ROOTS_EQUAL) {
+            if (dev > bestDev[thread_num]) {
+                bestDev[thread_num] = dev;
+                outputFile[thread_num] << setprecision(numeric_limits<fp_t>::digits10 + 1) << "dev:"
+                                       << bestDev[thread_num] << " ABC:" << coefficients[2] << " "
+                                       << coefficients[1] << " " << coefficients[0] << " roots:" << roots[0] << " "
+                                       << roots[1] << " out:" << output[0] << " " << output[1] << endl;
+                resFinal[thread_num].A = coefficients[2];
+                resFinal[thread_num].B = coefficients[1];
+                resFinal[thread_num].C = coefficients[0];
+                resFinal[thread_num].dev = dev;
+                resFinal[thread_num].root0 = roots[0];
+                resFinal[thread_num].root1 = roots[1];
+                resFinal[thread_num].out0 = output[0];
+                resFinal[thread_num].out1 = output[1];
+            }
         }
 
     }
-    bestDev = static_cast<fp_t>(0.L);
+    bestDev = new fp_t[procs]{0};
     bestRes bestOfBest{};
     ofstream bestFile = ofstream();
     bestFile.open("output.txt");
@@ -68,14 +71,15 @@ int main(){
         int thread_num = i;
         cout<<"i:"<<i<<endl;
         fp_t dev = resFinal[thread_num].dev;
-        if(dev > bestDev){
+        if(dev > bestDev[thread_num]){
             bestOfBest = resFinal[thread_num];
-            bestDev = dev;
+            bestDev[thread_num] = dev;
         }
         outputFile[thread_num].close();
     }
-    bestFile<<"dev:"<<bestOfBest.dev<<" ABC:"<<bestOfBest.A<<" "
+    bestFile<<setprecision(numeric_limits<fp_t>::digits10 + 1)<<"dev:"<<bestOfBest.dev<<" ABC:"<<bestOfBest.A<<" "
            <<bestOfBest.B<<" "<<bestOfBest.C<<" roots:"<<bestOfBest.root0<<" "<<bestOfBest.root1<<" out:"<<bestOfBest.out0<<" "<<bestOfBest.out1<<endl;
     bestFile.close();
+
 }
 #pragma clang diagnostic pop
